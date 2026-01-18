@@ -1,21 +1,21 @@
 """Test binary sensor entities for Mercury Switch integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mercury_switch.binary_sensor import async_setup_entry
 from custom_components.mercury_switch.const import DOMAIN
 
 
 @pytest.fixture
-def mock_config_entry() -> ConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
-    return ConfigEntry(
+    return MockConfigEntry(
         version=1,
         domain=DOMAIN,
         title="SG108Pro (192.168.1.100)",
@@ -24,9 +24,7 @@ def mock_config_entry() -> ConfigEntry:
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "test",
         },
-        source="user",
         unique_id="sg108pro_192_168_1_100",
-        options={},
         entry_id="test_entry_id",
     )
 
@@ -48,18 +46,19 @@ def mock_switch_infos():
 
 async def test_binary_sensor_entities_created(
     hass: HomeAssistant,
-    mock_config_entry: ConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_mercury_switch_api,
     mock_switch_infos,
 ) -> None:
     """Test that binary sensor entities are created correctly."""
     mock_config_entry.add_to_hass(hass)
 
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
     from custom_components.mercury_switch import MercurySwitchData
     from custom_components.mercury_switch.mercury_switch import (
         HomeAssistantMercurySwitch,
     )
-    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
     switch = HomeAssistantMercurySwitch(hass, mock_config_entry)
     switch.api = mock_mercury_switch_api
@@ -70,6 +69,7 @@ async def test_binary_sensor_entities_created(
         None,
         name="test",
         update_method=AsyncMock(return_value=mock_switch_infos),
+        config_entry=mock_config_entry,
     )
     coordinator.data = mock_switch_infos
 
@@ -92,23 +92,27 @@ async def test_binary_sensor_entities_created(
 
     # Check device class
     for entity in entities:
-        assert entity.entity_description.device_class == BinarySensorDeviceClass.CONNECTIVITY
+        assert (
+            entity.entity_description.device_class
+            == BinarySensorDeviceClass.CONNECTIVITY
+        )
 
 
 async def test_binary_sensor_values(
     hass: HomeAssistant,
-    mock_config_entry: ConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_mercury_switch_api,
     mock_switch_infos,
 ) -> None:
     """Test that binary sensor entities have correct values."""
     mock_config_entry.add_to_hass(hass)
 
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
     from custom_components.mercury_switch import MercurySwitchData
     from custom_components.mercury_switch.mercury_switch import (
         HomeAssistantMercurySwitch,
     )
-    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
     switch = HomeAssistantMercurySwitch(hass, mock_config_entry)
     switch.api = mock_mercury_switch_api
@@ -119,6 +123,7 @@ async def test_binary_sensor_values(
         None,
         name="test",
         update_method=AsyncMock(return_value=mock_switch_infos),
+        config_entry=mock_config_entry,
     )
     coordinator.data = mock_switch_infos
 

@@ -69,6 +69,7 @@ async def async_setup_entry(
         name=f"{switch.device_name} Switch infos",
         update_method=async_update_switch_infos,
         update_interval=SCAN_INTERVAL,
+        config_entry=entry,
     )
 
     await coordinator_switch_infos.async_config_entry_first_refresh()

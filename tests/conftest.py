@@ -1,16 +1,27 @@
 """Pytest fixtures for Mercury Switch integration tests."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from collections.abc import Iterator
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.mercury_switch.const import DOMAIN
+# Enable custom component loading
+pytest_plugins = "pytest_homeassistant_custom_component"
+
+
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Enable custom integrations for all tests."""
+    return
 
 
 @pytest.fixture
-def mock_mercury_switch_api():
+def mock_mercury_switch_api() -> Iterator[MagicMock]:
     """Create a mocked MercurySwitchConnector."""
-    with patch("custom_components.mercury_switch.mercury_switch.MercurySwitchConnector") as mock:
+    with patch(
+        "custom_components.mercury_switch.mercury_switch.MercurySwitchConnector"
+    ) as mock:
         connector = MagicMock()
         connector.get_login_cookie = MagicMock(return_value=True)
         connector.autodetect_model = MagicMock()
@@ -47,9 +58,11 @@ def mock_mercury_switch_api():
 
 
 @pytest.fixture
-def mock_mercury_switch_api_auth_fail():
+def mock_mercury_switch_api_auth_fail() -> Iterator[MagicMock]:
     """Create a mocked connector that fails authentication."""
-    with patch("custom_components.mercury_switch.mercury_switch.MercurySwitchConnector") as mock:
+    with patch(
+        "custom_components.mercury_switch.mercury_switch.MercurySwitchConnector"
+    ) as mock:
         connector = MagicMock()
         connector.get_login_cookie = MagicMock(return_value=False)
         connector.autodetect_model = MagicMock()
@@ -58,10 +71,10 @@ def mock_mercury_switch_api_auth_fail():
 
 
 @pytest.fixture
-def mock_mercury_switch_api_connection_error():
+def mock_mercury_switch_api_connection_error() -> Iterator[Any]:
     """Create a mocked connector that raises connection error."""
-    with patch("custom_components.mercury_switch.mercury_switch.MercurySwitchConnector") as mock:
-        from py_mercury_switch_api.exceptions import MercurySwitchConnectionError
-
-        mock.side_effect = MercurySwitchConnectionError("Connection failed")
+    with patch(
+        "custom_components.mercury_switch.mercury_switch.MercurySwitchConnector"
+    ) as mock:
+        mock.side_effect = ConnectionError("Connection failed")
         yield mock

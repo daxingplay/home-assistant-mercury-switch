@@ -4,19 +4,12 @@ from __future__ import annotations
 
 import logging
 from collections import OrderedDict
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
-    SensorDeviceClass,
-    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfInformation
-from homeassistant.core import callback
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.const import EntityCategory
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -24,11 +17,9 @@ if TYPE_CHECKING:
 
     from . import MercurySwitchConfigEntry
 from .mercury_entities import (
-    MercurySwitchAPICoordinatorEntity,
-    MercurySwitchSensorEntityDescription,
     MercurySwitchRouterSensorEntity,
+    MercurySwitchSensorEntityDescription,
 )
-from .mercury_switch import HomeAssistantMercurySwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -178,7 +169,9 @@ async def async_setup_entry(
             description = MercurySwitchSensorEntityDescription(
                 key=port_sensor_key.format(port=port_nr),
                 name=port_sensor_data["name"].format(port=port_nr),
-                native_unit_of_measurement=port_sensor_data.get("native_unit_of_measurement"),
+                native_unit_of_measurement=port_sensor_data.get(
+                    "native_unit_of_measurement"
+                ),
                 device_class=port_sensor_data.get("device_class"),
                 state_class=port_sensor_data.get("state_class"),
                 icon=port_sensor_data.get("icon"),
@@ -195,7 +188,9 @@ async def async_setup_entry(
         description = MercurySwitchSensorEntityDescription(
             key=vlan_sensor_key,
             name=vlan_sensor_data["name"],
-            native_unit_of_measurement=vlan_sensor_data.get("native_unit_of_measurement"),
+            native_unit_of_measurement=vlan_sensor_data.get(
+                "native_unit_of_measurement"
+            ),
             device_class=vlan_sensor_data.get("device_class"),
             icon=vlan_sensor_data.get("icon"),
         )
@@ -212,7 +207,7 @@ async def async_setup_entry(
         if vlan_count > 0:
             # Find all VLAN IDs from the data
             vlan_ids = []
-            for key in coordinator_switch_infos.data.keys():
+            for key in coordinator_switch_infos.data:
                 if key.startswith("vlan_") and key.endswith("_name"):
                     try:
                         vlan_id = int(key.replace("vlan_", "").replace("_name", ""))
@@ -225,7 +220,9 @@ async def async_setup_entry(
                     description = MercurySwitchSensorEntityDescription(
                         key=vlan_sensor_key.format(vlan_id=vlan_id),
                         name=vlan_sensor_data["name"].format(vlan_id=vlan_id),
-                        native_unit_of_measurement=vlan_sensor_data.get("native_unit_of_measurement"),
+                        native_unit_of_measurement=vlan_sensor_data.get(
+                            "native_unit_of_measurement"
+                        ),
                         device_class=vlan_sensor_data.get("device_class"),
                         icon=vlan_sensor_data.get("icon"),
                     )

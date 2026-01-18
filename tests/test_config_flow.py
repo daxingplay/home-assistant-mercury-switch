@@ -1,8 +1,5 @@
 """Test config flow for Mercury Switch integration."""
 
-from unittest.mock import patch
-
-import pytest
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
