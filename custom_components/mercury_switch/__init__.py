@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
-from dataclasses import dataclass
+
 from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -57,7 +58,7 @@ async def async_setup_entry(
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
     )
 
-    async def async_update_switch_infos() -> Optional[dict[str, Any]]:
+    async def async_update_switch_infos() -> dict[str, Any] | None:
         """Fetch data from the switch."""
         return await switch.async_get_switch_infos()
 

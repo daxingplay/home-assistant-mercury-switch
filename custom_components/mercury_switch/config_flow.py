@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
@@ -22,7 +22,9 @@ def _user_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "admin")): str,
+            vol.Required(
+                CONF_USERNAME, default=user_input.get(CONF_USERNAME, "admin")
+            ): str,
             vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")): str,
         }
     )
@@ -32,7 +34,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     """Options for the component."""
 
     async def async_step_init(
-        self, user_input: Optional[dict[str, Any]] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
@@ -62,8 +64,8 @@ class MercurySwitchFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_setup_form(
         self,
-        user_input: Optional[dict[str, Any]] = None,
-        errors: Optional[dict[str, str]] = None,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
     ) -> config_entries.ConfigFlowResult:
         """Show the setup form to the user."""
         if not user_input:
@@ -79,7 +81,7 @@ class MercurySwitchFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: Optional[dict[str, Any]] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
@@ -93,11 +95,13 @@ class MercurySwitchFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Open connection and check authentication
         try:
-            api = await self.hass.async_add_executor_job(get_api, host, username, password)
+            api = await self.hass.async_add_executor_job(
+                get_api, host, username, password
+            )
         except CannotLoginError:
             errors["base"] = "invalid_auth"
-        except Exception as e:
-            _LOGGER.error("Error connecting to switch: %s", e)
+        except (ConnectionError, TimeoutError, OSError):
+            _LOGGER.exception("Error connecting to switch")
             errors["base"] = "cannot_connect"
 
         if errors:

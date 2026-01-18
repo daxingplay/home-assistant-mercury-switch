@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -30,8 +30,8 @@ def get_api(host: str, username: str, password: str) -> MercurySwitchConnector:
     api: MercurySwitchConnector = MercurySwitchConnector(host, username, password)
     try:
         api.autodetect_model()
-    except Exception as e:
-        _LOGGER.warning("Could not autodetect model: %s", e)
+    except Exception:  # noqa: BLE001
+        _LOGGER.warning("Could not autodetect model", exc_info=True)
     _LOGGER.info(
         "Created MercurySwitchConnector API version %s for model %s.",
         str(api_version),
@@ -61,15 +61,17 @@ class HomeAssistantMercurySwitch:
         self._password = entry.data[CONF_PASSWORD]
 
         # set on setup
-        self.api: Optional[MercurySwitchConnector] = None
-        self.model = None
+        self.api: MercurySwitchConnector | None = None
+        self.model: str | None = None
 
         # async lock
         self.api_lock = asyncio.Lock()
 
     def _setup(self) -> bool:
         """Set up the Mercury switch."""
-        self.api = get_api(host=self._host, username=self._username, password=self._password)
+        self.api = get_api(
+            host=self._host, username=self._username, password=self._password
+        )
         if not self.api.switch_model or self.api.switch_model.MODEL_NAME == "":
             _LOGGER.info(
                 "[HomeAssistantMercurySwitch._setup] "
@@ -78,8 +80,8 @@ class HomeAssistantMercurySwitch:
             )
             try:
                 self.api.autodetect_model()
-            except Exception as e:
-                _LOGGER.warning("Could not autodetect model: %s", e)
+            except Exception:  # noqa: BLE001
+                _LOGGER.warning("Could not autodetect model", exc_info=True)
             _LOGGER.info(
                 "[HomeAssistantMercurySwitch._setup] Autodetected model: %s",
                 str(self.api.switch_model.MODEL_NAME),
@@ -94,10 +96,12 @@ class HomeAssistantMercurySwitch:
                 return False
         return True
 
-    async def async_get_switch_infos(self) -> Optional[dict[str, Any]]:
+    async def async_get_switch_infos(self) -> dict[str, Any] | None:
         """Get switch information asynchronously."""
         async with self.api_lock:
-            return await self.hass.async_add_executor_job(self.api.get_switch_infos)  # type: ignore[attr-defined]
+            if self.api:
+                return await self.hass.async_add_executor_job(self.api.get_switch_infos)
+        return None
 
 
 class MercurySwitchCoordinatorEntity(CoordinatorEntity):
